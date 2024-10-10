@@ -10,9 +10,91 @@ output: "github_document"
 ```{r}
 library(haven)
 library(dplyr)
+library(tidyr)
 library(ggplot2)
+library(psych)
+library(bruceR)
+library(ggsci)
+library(see)
+library(car)
 
-#fbshfhb
+dataset <- read.csv("/Users/rainbow/Documents/project\ dataset.csv")
+
+```
+
+#Recode variables
+```{r}
+dataset <- dataset %>%
+  mutate_at(c('gender'),funs(str_replace(., "1", "Men")))
+
+dataset <- dataset %>%
+  mutate_at(c('gender'),funs(str_replace(., "2", "Women")))
+```
+#Normality
+##Normality plots
+```{r}
+ggplot(dataset, aes(x = Self_esteem)) + geom_histogram(binwidth = 5) + theme_classic()
+
+ggplot(dataset, aes(x = Self_esteem)) + geom_density(adjust = 2)  + theme_classic()
+
+qq<-ggplot(dataset, aes(sample = Self_esteem)) + geom_qq()  + theme_classic()
+
+qq+ geom_qq_line()
+```
+###Normality plots by gender
+```{r}
+ggplot(dataset, aes(x = Self_esteem)) + geom_histogram(binwidth = 5) + theme_classic() + facet_wrap(~gender) + theme_classic()
+
+ggplot(dataset, aes(x = Self_esteem)) + geom_density(adjust = 2)  + theme_classic() + facet_wrap(~gender) + theme_classic()
+
+qq<-ggplot(dataset, aes(sample = Self_esteem)) + geom_qq()  + theme_classic() + facet_wrap(~gender) + theme_classic()
+
+qq+ geom_qq_line()+ facet_wrap(~gender) 
+```
+##Normality tests
+```{r}
+describe(dataset$Self_esteem)
+
+shapiro.test(dataset$Self_esteem)
+
+```
+###Normality tests by gender
+```{r}
+?describeBy()
+
+describeBy(Self_esteem ~ gender, data = dataset)
+
+dataset %>%
+  group_by(gender) %>%
+  summarize(W = shapiro.test(Self_esteem)$statistic, p_value = shapiro.test(Self_esteem)$p.value)
+```
+# Equal Variance between Groups
+## Descrptive Variance
+```{r}
+data_clean<-drop_na(dataset)
+
+var(data_clean$Self_esteem)
+
+data_clean %>%
+  group_by(gender) %>%
+  summarize(variance = var(Self_esteem))
+```
+## Equal Variance Test
+```{r}
+leveneTest(Self_esteem~gender, data_clean)
+
+MANOVA(data_clean, dv = "Self_esteem", between = "gender")
+
+```
+#Summary Descriptive Statistics
+```{r}
+data_clean %>%
+  group_by(gender) %>%
+  dplyr::summarize(mean_Self_esteem    = mean(Self_esteem),
+      mean_relationship_satis    = mean(relationship_satis),
+      std_dev_Self_esteem = sd(Self_esteem),
+      std_dev_relationship_satis = sd(relationship_satis),
+      corr_Self_esteem_relationship_satis  = cor(Self_esteem, relationship_satis))
 
 ```
 
