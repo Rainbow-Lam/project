@@ -29,61 +29,63 @@ dataset <- dataset %>%
 
 dataset <- dataset %>%
   mutate_at(c('gender'),funs(str_replace(., "2", "Women")))
+
 ```
 #Normality
 ##Normality plots
 ```{r}
-ggplot(dataset, aes(x = Self_esteem)) + geom_histogram(binwidth = 5) + theme_classic()
+ggplot(dataset, aes(x = relationship_satis)) + geom_histogram(binwidth = 5) + theme_classic()
 
-ggplot(dataset, aes(x = Self_esteem)) + geom_density(adjust = 2)  + theme_classic()
+ggplot(dataset, aes(x = relationship_satis)) + geom_density(adjust = 2)  + theme_classic()
 
-qq<-ggplot(dataset, aes(sample = Self_esteem)) + geom_qq()  + theme_classic()
+qq<-ggplot(dataset, aes(sample = relationship_satis)) + geom_qq()  + theme_classic()
 
 qq+ geom_qq_line()
 ```
 ###Normality plots by gender
 ```{r}
-ggplot(dataset, aes(x = Self_esteem)) + geom_histogram(binwidth = 5) + theme_classic() + facet_wrap(~gender) + theme_classic()
+ggplot(dataset, aes(x = relationship_satis)) + geom_histogram(binwidth = 5) + theme_classic() + facet_wrap(~gender) + theme_classic()
 
-ggplot(dataset, aes(x = Self_esteem)) + geom_density(adjust = 2)  + theme_classic() + facet_wrap(~gender) + theme_classic()
+ggplot(dataset, aes(x = relationship_satis)) + geom_density(adjust = 2)  + theme_classic() + facet_wrap(~gender) + theme_classic()
 
-qq<-ggplot(dataset, aes(sample = Self_esteem)) + geom_qq()  + theme_classic() + facet_wrap(~gender) + theme_classic()
+qq<-ggplot(dataset, aes(sample = relationship_satis)) + geom_qq()  + theme_classic() + facet_wrap(~gender) + theme_classic()
 
 qq+ geom_qq_line()+ facet_wrap(~gender) 
 ```
 ##Normality tests
 ```{r}
-describe(dataset$Self_esteem)
+describe(dataset$relationship_satis)
 
-shapiro.test(dataset$Self_esteem)
+shapiro.test(dataset$relationship_satis)
 
 ```
 ###Normality tests by gender
 ```{r}
 ?describeBy()
 
-describeBy(Self_esteem ~ gender, data = dataset)
+describeBy(relationship_satis ~ gender, data = dataset)
 
 dataset %>%
   group_by(gender) %>%
-  summarize(W = shapiro.test(Self_esteem)$statistic, p_value = shapiro.test(Self_esteem)$p.value)
+  summarize(W = shapiro.test(relationship_satis)$statistic, p_value = shapiro.test(relationship_satis)$p.value)
 ```
+
 # Equal Variance between Groups
 ## Descrptive Variance
 ```{r}
 data_clean<-drop_na(dataset)
 
-var(data_clean$Self_esteem)
+var(data_clean$relationship_satis)
 
 data_clean %>%
   group_by(gender) %>%
-  summarize(variance = var(Self_esteem))
+  summarize(variance = var(relationship_satis))
 ```
 ## Equal Variance Test
 ```{r}
-leveneTest(Self_esteem~gender, data_clean)
+leveneTest(relationship_satis~gender, data_clean)
 
-MANOVA(data_clean, dv = "Self_esteem", between = "gender")
+MANOVA(data_clean, dv = "relationship_satis", between = "gender")
 
 ```
 #Summary Descriptive Statistics

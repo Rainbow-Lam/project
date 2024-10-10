@@ -141,19 +141,19 @@ dataset <- dataset %>%
 \#Normality \##Normality plots
 
 ``` r
-ggplot(dataset, aes(x = Self_esteem)) + geom_histogram(binwidth = 5) + theme_classic()
+ggplot(dataset, aes(x = relationship_satis)) + geom_histogram(binwidth = 5) + theme_classic()
 ```
 
 ![](My-project_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
 
 ``` r
-ggplot(dataset, aes(x = Self_esteem)) + geom_density(adjust = 2)  + theme_classic()
+ggplot(dataset, aes(x = relationship_satis)) + geom_density(adjust = 2)  + theme_classic()
 ```
 
 ![](My-project_files/figure-gfm/unnamed-chunk-3-2.png)<!-- -->
 
 ``` r
-qq<-ggplot(dataset, aes(sample = Self_esteem)) + geom_qq()  + theme_classic()
+qq<-ggplot(dataset, aes(sample = relationship_satis)) + geom_qq()  + theme_classic()
 
 qq+ geom_qq_line()
 ```
@@ -162,19 +162,19 @@ qq+ geom_qq_line()
 \###Normality plots by gender
 
 ``` r
-ggplot(dataset, aes(x = Self_esteem)) + geom_histogram(binwidth = 5) + theme_classic() + facet_wrap(~gender) + theme_classic()
+ggplot(dataset, aes(x = relationship_satis)) + geom_histogram(binwidth = 5) + theme_classic() + facet_wrap(~gender) + theme_classic()
 ```
 
 ![](My-project_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 ``` r
-ggplot(dataset, aes(x = Self_esteem)) + geom_density(adjust = 2)  + theme_classic() + facet_wrap(~gender) + theme_classic()
+ggplot(dataset, aes(x = relationship_satis)) + geom_density(adjust = 2)  + theme_classic() + facet_wrap(~gender) + theme_classic()
 ```
 
 ![](My-project_files/figure-gfm/unnamed-chunk-4-2.png)<!-- -->
 
 ``` r
-qq<-ggplot(dataset, aes(sample = Self_esteem)) + geom_qq()  + theme_classic() + facet_wrap(~gender) + theme_classic()
+qq<-ggplot(dataset, aes(sample = relationship_satis)) + geom_qq()  + theme_classic() + facet_wrap(~gender) + theme_classic()
 
 qq+ geom_qq_line()+ facet_wrap(~gender) 
 ```
@@ -183,55 +183,55 @@ qq+ geom_qq_line()+ facet_wrap(~gender)
 \##Normality tests
 
 ``` r
-describe(dataset$Self_esteem)
+describe(dataset$relationship_satis)
 ```
 
-    ##    vars   n  mean   sd median trimmed  mad min max range skew kurtosis  se
-    ## X1    1 104 38.34 5.08     38    38.4 5.93  27  49    22 -0.1    -0.74 0.5
+    ##    vars   n  mean   sd median trimmed  mad min max range  skew kurtosis   se
+    ## X1    1 104 26.09 3.66     27   26.18 2.97  14  35    21 -0.45     0.89 0.36
 
 ``` r
-shapiro.test(dataset$Self_esteem)
+shapiro.test(dataset$relationship_satis)
 ```
 
     ## 
     ##  Shapiro-Wilk normality test
     ## 
-    ## data:  dataset$Self_esteem
-    ## W = 0.98194, p-value = 0.1684
+    ## data:  dataset$relationship_satis
+    ## W = 0.95627, p-value = 0.00171
 
 \###Normality tests by gender
 
 ``` r
 ?describeBy()
 
-describeBy(Self_esteem ~ gender, data = dataset)
+describeBy(relationship_satis ~ gender, data = dataset)
 ```
 
     ## 
     ##  Descriptive statistics by group 
     ## gender: Men
-    ##             vars  n mean   sd median trimmed  mad min max range  skew kurtosis
-    ## Self_esteem    1 46 38.7 5.26     38   38.74 6.67  27  47    20 -0.02    -1.03
-    ##               se
-    ## Self_esteem 0.78
+    ##                    vars  n  mean   sd median trimmed  mad min max range  skew
+    ## relationship_satis    1 46 25.91 3.73     27   26.08 2.97  16  35    19 -0.53
+    ##                    kurtosis   se
+    ## relationship_satis     0.46 0.55
     ## ------------------------------------------------------------ 
     ## gender: Women
-    ##             vars  n  mean   sd median trimmed  mad min max range  skew kurtosis
-    ## Self_esteem    1 58 38.05 4.96     38   38.17 4.45  27  49    22 -0.18     -0.6
-    ##               se
-    ## Self_esteem 0.65
+    ##                    vars  n  mean   sd median trimmed  mad min max range  skew
+    ## relationship_satis    1 58 26.22 3.64     27   26.25 2.97  14  35    21 -0.36
+    ##                    kurtosis   se
+    ## relationship_satis     1.09 0.48
 
 ``` r
 dataset %>%
   group_by(gender) %>%
-  summarize(W = shapiro.test(Self_esteem)$statistic, p_value = shapiro.test(Self_esteem)$p.value)
+  summarize(W = shapiro.test(relationship_satis)$statistic, p_value = shapiro.test(relationship_satis)$p.value)
 ```
 
     ## # A tibble: 2 × 3
     ##   gender     W p_value
     ##   <chr>  <dbl>   <dbl>
-    ## 1 Men    0.957  0.0875
-    ## 2 Women  0.986  0.729
+    ## 1 Men    0.945  0.0301
+    ## 2 Women  0.955  0.0298
 
 # Equal Variance between Groups
 
@@ -240,27 +240,27 @@ dataset %>%
 ``` r
 data_clean<-drop_na(dataset)
 
-var(data_clean$Self_esteem)
+var(data_clean$relationship_satis)
 ```
 
-    ## [1] 25.81768
+    ## [1] 13.41962
 
 ``` r
 data_clean %>%
   group_by(gender) %>%
-  summarize(variance = var(Self_esteem))
+  summarize(variance = var(relationship_satis))
 ```
 
     ## # A tibble: 2 × 2
     ##   gender variance
     ##   <chr>     <dbl>
-    ## 1 Men        27.6
-    ## 2 Women      24.6
+    ## 1 Men        13.9
+    ## 2 Women      13.2
 
 ## Equal Variance Test
 
 ``` r
-leveneTest(Self_esteem~gender, data_clean)
+leveneTest(relationship_satis~gender, data_clean)
 ```
 
     ## Warning in leveneTest.default(y = y, group = group, ...): group coerced to
@@ -268,11 +268,11 @@ leveneTest(Self_esteem~gender, data_clean)
 
     ## Levene's Test for Homogeneity of Variance (center = median)
     ##        Df F value Pr(>F)
-    ## group   1  0.6845   0.41
+    ## group   1   5e-04 0.9828
     ##       102
 
 ``` r
-MANOVA(data_clean, dv = "Self_esteem", between = "gender")
+MANOVA(data_clean, dv = "relationship_satis", between = "gender")
 ```
 
     ## 
@@ -282,21 +282,21 @@ MANOVA(data_clean, dv = "Self_esteem", between = "gender")
     ## ───────────────────────────
     ##  "gender"   Mean    S.D.  n
     ## ───────────────────────────
-    ##     Men   38.696 (5.257) 46
-    ##     Women 38.052 (4.965) 58
+    ##     Men   25.913 (3.729) 46
+    ##     Women 26.224 (3.637) 58
     ## ───────────────────────────
     ## Total sample size: N = 104
     ## 
     ## ANOVA Table:
-    ## Dependent variable(s):      Self_esteem
+    ## Dependent variable(s):      relationship_satis
     ## Between-subjects factor(s): gender
     ## Within-subjects factor(s):  –
     ## Covariate(s):               –
-    ## ──────────────────────────────────────────────────────────────────────
-    ##             MS    MSE df1 df2     F     p     η²p [90% CI of η²p]  η²G
-    ## ──────────────────────────────────────────────────────────────────────
-    ## gender  10.637 25.967   1 102 0.410  .524       .004 [.000, .048] .004
-    ## ──────────────────────────────────────────────────────────────────────
+    ## ─────────────────────────────────────────────────────────────────────
+    ##            MS    MSE df1 df2     F     p     η²p [90% CI of η²p]  η²G
+    ## ─────────────────────────────────────────────────────────────────────
+    ## gender  2.483 13.527   1 102 0.184  .669       .002 [.000, .038] .002
+    ## ─────────────────────────────────────────────────────────────────────
     ## MSE = mean square error (the residual variance of the linear model)
     ## η²p = partial eta-squared = SS / (SS + SSE) = F * df1 / (F * df1 + df2)
     ## ω²p = partial omega-squared = (F - 1) * df1 / (F * df1 + df2 + 1)
@@ -304,11 +304,11 @@ MANOVA(data_clean, dv = "Self_esteem", between = "gender")
     ## Cohen’s f² = η²p / (1 - η²p)
     ## 
     ## Levene’s Test for Homogeneity of Variance:
-    ## ─────────────────────────────────────────────
-    ##                  Levene’s F df1 df2     p    
-    ## ─────────────────────────────────────────────
-    ## DV: Self_esteem       0.807   1 102  .371    
-    ## ─────────────────────────────────────────────
+    ## ────────────────────────────────────────────────────
+    ##                         Levene’s F df1 df2     p    
+    ## ────────────────────────────────────────────────────
+    ## DV: relationship_satis       0.002   1 102  .963    
+    ## ────────────────────────────────────────────────────
 
 \#Summary Descriptive Statistics
 
