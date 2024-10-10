@@ -1,0 +1,15 @@
+---
+title: "My project"
+author: "Rainbow"
+date: "2024-10-11"
+output: "github_document"
+---
+
+
+
+```{r}
+library(haven)
+library(dplyr)
+library(ggplot2)
+```
+
