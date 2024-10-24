@@ -17,6 +17,13 @@ library(bruceR)
 library(ggsci)
 library(see)
 library(car)
+library(Rmisc)
+library(rstatix)
+library(emmeans)
+library(labelled)
+library(ggstatsplot)
+library(performance)
+library(sjPlot)
 
 dataset <- read.csv("/Users/rainbow/Documents/project\ dataset.csv")
 
@@ -29,6 +36,12 @@ dataset <- dataset %>%
 
 dataset <- dataset %>%
   mutate_at(c('gender'),funs(str_replace(., "2", "Women")))
+
+
+breaks <- c(20, 40, 50)
+labels <- c("Low", "High")
+  
+dataset$SE_group <- cut(dataset$Self_esteem, breaks = breaks, labels = labels, right = FALSE)
 
 ```
 #Normality
@@ -59,7 +72,7 @@ describe(dataset$relationship_satis)
 shapiro.test(dataset$relationship_satis)
 
 ```
-###Normality tests by gender
+### Normality tests by gender
 ```{r}
 ?describeBy()
 
@@ -68,6 +81,7 @@ describeBy(relationship_satis ~ gender, data = dataset)
 dataset %>%
   group_by(gender) %>%
   summarize(W = shapiro.test(relationship_satis)$statistic, p_value = shapiro.test(relationship_satis)$p.value)
+
 ```
 
 # Equal Variance between Groups
@@ -97,6 +111,71 @@ data_clean %>%
       std_dev_Self_esteem = sd(Self_esteem),
       std_dev_relationship_satis = sd(relationship_satis),
       corr_Self_esteem_relationship_satis  = cor(Self_esteem, relationship_satis))
+```
+
+#ANOVA
+##Recode 2x2 into 1x4
+```{r}
+data_clean$Group <- ifelse(data_clean$gender == "Women" & data_clean$SE_group == "High", "High SE Women", 
+                     ifelse(data_clean$gender == "Men" & data_clean$SE_group == "High", "High SE Men", 
+                            ifelse(data_clean$gender == "Women" & data_clean$SE_group == "Low", "Low SE Women", 
+                                   "Low SE Men")))
+```
+
+##contrast coefficients
+```{r}
+#1st group is High SE Women, 
+#2nd group is High SE men, 
+#3rd group is Low SE Women,
+#4th group is Low SE Men. 
+
+```
+
+##Model and tests
+```{r}
+mod<-MANOVA(data_clean, dv = "relationship_satis", between = c("gender", "SE_group")) 
+
+EMMEANS(mod, effect = "gender", by = "SE_group", p.adjust = "none")
+
+EMMEANS(mod, effect = "SE_group", by = "gender", p.adjust = "none")
+```
+
+##Visualization
+```{r}
+
+plot<-summarySE(data_clean, measurevar="relationship_satis", groupvars=c("gender", "SE_group"))
+
+plot
+
+plot2<-summarySE(data_clean, measurevar="relationship_satis", groupvars=c("Group"))
+
+plot2
+
+ggplot(plot, aes(x = SE_group, y = relationship_satis, fill = SE_group)) +
+  geom_col() + facet_wrap(~ gender) + theme_bruce()
+
+ggplot(plot2, aes(x = Group, y = relationship_satis, fill = Group)) +
+  geom_col()  + theme_bruce() + theme(axis.text.x = element_text(angle = -10))
+```
+#Regression 
+##Correlation
+```{r}
+regression <- data_clean %>%
+  select(power, authenticity, Self_esteem, relationship_satis)
+
+Corr(regression)
+```
+##Regression
+```{r}
+model<-lm(relationship_satis ~ power + authenticity + Self_esteem, data = regression)
+
+check_model(model)
+
+model_summary(model)
+
+tab_model(model)
+
+plot_model(model,  type ="est",  show.values = TRUE, vline.color = "#1B191999", line.size = 1.5, dot.size = 2.5, colors = "blue") + theme_bruce()
 
 ```
 

@@ -101,6 +101,66 @@ library(car)
     ##     recode
 
 ``` r
+library(Rmisc)
+```
+
+    ## Loading required package: lattice
+
+    ## Loading required package: plyr
+
+    ## ------------------------------------------------------------------------------
+
+    ## You have loaded plyr after dplyr - this is likely to cause problems.
+    ## If you need functions from both plyr and dplyr, please load plyr first, then dplyr:
+    ## library(plyr); library(dplyr)
+
+    ## ------------------------------------------------------------------------------
+
+    ## 
+    ## Attaching package: 'plyr'
+
+    ## The following objects are masked from 'package:dplyr':
+    ## 
+    ##     arrange, count, desc, failwith, id, mutate, rename, summarise,
+    ##     summarize
+
+``` r
+library(rstatix)
+```
+
+    ## 
+    ## Attaching package: 'rstatix'
+
+    ## The following objects are masked from 'package:plyr':
+    ## 
+    ##     desc, mutate
+
+    ## The following objects are masked from 'package:effectsize':
+    ## 
+    ##     cohens_d, eta_squared
+
+    ## The following object is masked from 'package:stats':
+    ## 
+    ##     filter
+
+``` r
+library(emmeans)
+library(labelled)
+library(ggstatsplot)
+```
+
+    ## You can cite this package as:
+    ##      Patil, I. (2021). Visualizations with statistical details: The 'ggstatsplot' approach.
+    ##      Journal of Open Source Software, 6(61), 3167, doi:10.21105/joss.03167
+
+``` r
+library(performance)
+library(sjPlot)
+```
+
+    ## Learn more about sjPlot with 'browseVignettes("sjPlot")'.
+
+``` r
 dataset <- read.csv("/Users/rainbow/Documents/project\ dataset.csv")
 ```
 
@@ -137,6 +197,13 @@ dataset <- dataset %>%
     ## # Using lambdas list(~ mean(., trim = .2), ~ median(., na.rm = TRUE))
     ## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
     ## generated.
+
+``` r
+breaks <- c(20, 40, 50)
+labels <- c("Low", "High")
+  
+dataset$SE_group <- cut(dataset$Self_esteem, breaks = breaks, labels = labels, right = FALSE)
+```
 
 \#Normality \##Normality plots
 
@@ -199,7 +266,7 @@ shapiro.test(dataset$relationship_satis)
     ## data:  dataset$relationship_satis
     ## W = 0.95627, p-value = 0.00171
 
-\###Normality tests by gender
+### Normality tests by gender
 
 ``` r
 ?describeBy()
@@ -227,11 +294,8 @@ dataset %>%
   summarize(W = shapiro.test(relationship_satis)$statistic, p_value = shapiro.test(relationship_satis)$p.value)
 ```
 
-    ## # A tibble: 2 × 3
-    ##   gender     W p_value
-    ##   <chr>  <dbl>   <dbl>
-    ## 1 Men    0.945  0.0301
-    ## 2 Women  0.955  0.0298
+    ##           W     p_value
+    ## 1 0.9562674 0.001710247
 
 # Equal Variance between Groups
 
@@ -251,11 +315,8 @@ data_clean %>%
   summarize(variance = var(relationship_satis))
 ```
 
-    ## # A tibble: 2 × 2
-    ##   gender variance
-    ##   <chr>     <dbl>
-    ## 1 Men        13.9
-    ## 2 Women      13.2
+    ##   variance
+    ## 1 13.41962
 
 ## Equal Variance Test
 
@@ -329,3 +390,363 @@ data_clean %>%
     ## 2 Women              38.1                    26.2                4.96
     ## # ℹ 2 more variables: std_dev_relationship_satis <dbl>,
     ## #   corr_Self_esteem_relationship_satis <dbl>
+
+\#ANOVA \##Recode 2x2 into 1x4
+
+``` r
+data_clean$Group <- ifelse(data_clean$gender == "Women" & data_clean$SE_group == "High", "High SE Women", 
+                     ifelse(data_clean$gender == "Men" & data_clean$SE_group == "High", "High SE Men", 
+                            ifelse(data_clean$gender == "Women" & data_clean$SE_group == "Low", "Low SE Women", 
+                                   "Low SE Men")))
+```
+
+\##contrast coefficients
+
+``` r
+#1st group is High SE Women, 
+#2nd group is High SE men, 
+#3rd group is Low SE Women,
+#4th group is Low SE Men. 
+```
+
+\##Model and tests
+
+``` r
+mod<-MANOVA(data_clean, dv = "relationship_satis", between = c("gender", "SE_group")) 
+```
+
+    ## 
+    ## ====== ANOVA (Between-Subjects Design) ======
+    ## 
+    ## Descriptives:
+    ## ──────────────────────────────────────
+    ##  "gender" "SE_group"   Mean    S.D.  n
+    ## ──────────────────────────────────────
+    ##     Men         Low  24.538 (3.701) 26
+    ##     Men         High 27.700 (2.993) 20
+    ##     Women       Low  25.000 (3.708) 33
+    ##     Women       High 27.840 (2.882) 25
+    ## ──────────────────────────────────────
+    ## Total sample size: N = 104
+    ## 
+    ## ANOVA Table:
+    ## Dependent variable(s):      relationship_satis
+    ## Between-subjects factor(s): gender, SE_group
+    ## Within-subjects factor(s):  –
+    ## Covariate(s):               –
+    ## ───────────────────────────────────────────────────────────────────────────────────
+    ##                         MS    MSE df1 df2      F     p     η²p [90% CI of η²p]  η²G
+    ## ───────────────────────────────────────────────────────────────────────────────────
+    ## gender               2.279 11.520   1 100  0.198  .657       .002 [.000, .039] .002
+    ## SE_group           226.867 11.520   1 100 19.693 <.001 ***   .165 [.068, .274] .165
+    ## gender * SE_group    0.651 11.520   1 100  0.057  .813       .001 [.000, .026] .001
+    ## ───────────────────────────────────────────────────────────────────────────────────
+    ## MSE = mean square error (the residual variance of the linear model)
+    ## η²p = partial eta-squared = SS / (SS + SSE) = F * df1 / (F * df1 + df2)
+    ## ω²p = partial omega-squared = (F - 1) * df1 / (F * df1 + df2 + 1)
+    ## η²G = generalized eta-squared (see Olejnik & Algina, 2003)
+    ## Cohen’s f² = η²p / (1 - η²p)
+    ## 
+    ## Levene’s Test for Homogeneity of Variance:
+    ## ────────────────────────────────────────────────────
+    ##                         Levene’s F df1 df2     p    
+    ## ────────────────────────────────────────────────────
+    ## DV: relationship_satis       1.923   3 100  .131    
+    ## ────────────────────────────────────────────────────
+
+``` r
+EMMEANS(mod, effect = "gender", by = "SE_group", p.adjust = "none")
+```
+
+    ## ------ EMMEANS (effect = "gender") ------
+    ## 
+    ## Joint Tests of "gender":
+    ## ──────────────────────────────────────────────────────────────
+    ##  Effect "SE_group" df1 df2     F     p     η²p [90% CI of η²p]
+    ## ──────────────────────────────────────────────────────────────
+    ##  gender       Low    1 100 0.269  .605       .003 [.000, .043]
+    ##  gender       High   1 100 0.019  .891       .000 [.000, .016]
+    ## ──────────────────────────────────────────────────────────────
+    ## Note. Simple effects of repeated measures with 3 or more levels
+    ## are different from the results obtained with SPSS MANOVA syntax.
+    ## 
+    ## Estimated Marginal Means of "gender":
+    ## ────────────────────────────────────────────────────
+    ##  "gender" "SE_group"   Mean [95% CI of Mean]    S.E.
+    ## ────────────────────────────────────────────────────
+    ##     Men         Low  24.538 [23.218, 25.859] (0.666)
+    ##     Women       Low  25.000 [23.828, 26.172] (0.591)
+    ##     Men         High 27.700 [26.194, 29.206] (0.759)
+    ##     Women       High 27.840 [26.493, 29.187] (0.679)
+    ## ────────────────────────────────────────────────────
+    ## 
+    ## Pairwise Comparisons of "gender":
+    ## ────────────────────────────────────────────────────────────────────────────────────
+    ##     Contrast "SE_group" Estimate    S.E.  df     t     p     Cohen’s d [95% CI of d]
+    ## ────────────────────────────────────────────────────────────────────────────────────
+    ##  Women - Men       Low     0.462 (0.890) 100 0.519  .605       0.136 [-0.384, 0.656]
+    ##  Women - Men       High    0.140 (1.018) 100 0.137  .891       0.041 [-0.554, 0.636]
+    ## ────────────────────────────────────────────────────────────────────────────────────
+    ## Pooled SD for computing Cohen’s d: 3.394
+    ## 
+    ## Disclaimer:
+    ## By default, pooled SD is Root Mean Square Error (RMSE).
+    ## There is much disagreement on how to compute Cohen’s d.
+    ## You are completely responsible for setting `sd.pooled`.
+    ## You might also use `effectsize::t_to_d()` to compute d.
+
+``` r
+EMMEANS(mod, effect = "SE_group", by = "gender", p.adjust = "none")
+```
+
+    ## ------ EMMEANS (effect = "SE_group") ------
+    ## 
+    ## Joint Tests of "SE_group":
+    ## ──────────────────────────────────────────────────────────────
+    ##    Effect "gender" df1 df2     F     p     η²p [90% CI of η²p]
+    ## ──────────────────────────────────────────────────────────────
+    ##  SE_group    Men     1 100 9.808  .002 **    .089 [.020, .188]
+    ##  SE_group    Women   1 100 9.959  .002 **    .091 [.021, .189]
+    ## ──────────────────────────────────────────────────────────────
+    ## Note. Simple effects of repeated measures with 3 or more levels
+    ## are different from the results obtained with SPSS MANOVA syntax.
+    ## 
+    ## Estimated Marginal Means of "SE_group":
+    ## ────────────────────────────────────────────────────
+    ##  "SE_group" "gender"   Mean [95% CI of Mean]    S.E.
+    ## ────────────────────────────────────────────────────
+    ##        Low     Men   24.538 [23.218, 25.859] (0.666)
+    ##        High    Men   27.700 [26.194, 29.206] (0.759)
+    ##        Low     Women 25.000 [23.828, 26.172] (0.591)
+    ##        High    Women 27.840 [26.493, 29.187] (0.679)
+    ## ────────────────────────────────────────────────────
+    ## 
+    ## Pairwise Comparisons of "SE_group":
+    ## ─────────────────────────────────────────────────────────────────────────────────
+    ##    Contrast "gender" Estimate    S.E.  df     t     p     Cohen’s d [95% CI of d]
+    ## ─────────────────────────────────────────────────────────────────────────────────
+    ##  High - Low    Men      3.162 (1.010) 100 3.132  .002 **     0.931 [0.341, 1.522]
+    ##  High - Low    Women    2.840 (0.900) 100 3.156  .002 **     0.837 [0.311, 1.363]
+    ## ─────────────────────────────────────────────────────────────────────────────────
+    ## Pooled SD for computing Cohen’s d: 3.394
+    ## 
+    ## Disclaimer:
+    ## By default, pooled SD is Root Mean Square Error (RMSE).
+    ## There is much disagreement on how to compute Cohen’s d.
+    ## You are completely responsible for setting `sd.pooled`.
+    ## You might also use `effectsize::t_to_d()` to compute d.
+
+\##Visualization
+
+``` r
+plot<-summarySE(data_clean, measurevar="relationship_satis", groupvars=c("gender", "SE_group"))
+
+plot
+```
+
+    ##   gender SE_group  N relationship_satis       sd        se       ci
+    ## 1    Men      Low 26           24.53846 3.701143 0.7258539 1.494924
+    ## 2    Men     High 20           27.70000 2.992974 0.6692494 1.400755
+    ## 3  Women      Low 33           25.00000 3.708099 0.6454972 1.314835
+    ## 4  Women     High 25           27.84000 2.882129 0.5764258 1.189684
+
+``` r
+plot2<-summarySE(data_clean, measurevar="relationship_satis", groupvars=c("Group"))
+
+plot2
+```
+
+    ##           Group  N relationship_satis       sd        se       ci
+    ## 1   High SE Men 20           27.70000 2.992974 0.6692494 1.400755
+    ## 2 High SE Women 25           27.84000 2.882129 0.5764258 1.189684
+    ## 3    Low SE Men 26           24.53846 3.701143 0.7258539 1.494924
+    ## 4  Low SE Women 33           25.00000 3.708099 0.6454972 1.314835
+
+``` r
+ggplot(plot, aes(x = SE_group, y = relationship_satis, fill = SE_group)) +
+  geom_col() + facet_wrap(~ gender) + theme_bruce()
+```
+
+![](My-project_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+
+``` r
+ggplot(plot2, aes(x = Group, y = relationship_satis, fill = Group)) +
+  geom_col()  + theme_bruce() + theme(axis.text.x = element_text(angle = -10))
+```
+
+![](My-project_files/figure-gfm/unnamed-chunk-13-2.png)<!-- -->
+\#Regression \##Correlation
+
+``` r
+regression <- data_clean %>%
+  select(power, authenticity, Self_esteem, relationship_satis)
+
+Corr(regression)
+```
+
+    ## Pearson's r and 95% confidence intervals:
+    ## ────────────────────────────────────────────────────────────────
+    ##                                     r     [95% CI]     p       N
+    ## ────────────────────────────────────────────────────────────────
+    ## power-authenticity               0.44 [0.27, 0.58] <.001 *** 104
+    ## power-Self_esteem                0.61 [0.47, 0.72] <.001 *** 104
+    ## power-relationship_satis         0.37 [0.19, 0.53] <.001 *** 104
+    ## authenticity-Self_esteem         0.61 [0.47, 0.72] <.001 *** 104
+    ## authenticity-relationship_satis  0.37 [0.19, 0.53] <.001 *** 104
+    ## Self_esteem-relationship_satis   0.48 [0.32, 0.62] <.001 *** 104
+    ## ────────────────────────────────────────────────────────────────
+
+![](My-project_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+
+    ## Correlation matrix is displayed in the RStudio `Plots` Pane.
+
+\##Regression
+
+``` r
+model<-lm(relationship_satis ~ power + authenticity + Self_esteem, data = regression)
+
+check_model(model)
+```
+
+![](My-project_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+
+``` r
+model_summary(model)
+```
+
+    ## 
+    ## Model Summary
+    ## 
+    ## ────────────────────────────────────
+    ##               (1) relationship_satis
+    ## ────────────────────────────────────
+    ## (Intercept)    10.728 ***           
+    ##                (2.772)              
+    ## power           0.109               
+    ##                (0.106)              
+    ## authenticity    0.069               
+    ##                (0.065)              
+    ## Self_esteem     0.245 **            
+    ##                (0.089)              
+    ## ────────────────────────────────────
+    ## R^2             0.248               
+    ## Adj. R^2        0.226               
+    ## Num. obs.     104                   
+    ## ────────────────────────────────────
+    ## Note. * p < .05, ** p < .01, *** p < .001.
+    ## 
+    ## # Check for Multicollinearity
+    ## 
+    ## Low Correlation
+    ## 
+    ##          Term  VIF   VIF 95% CI Increased SE Tolerance Tolerance 95% CI
+    ##         power 1.60 [1.31, 2.17]         1.27      0.62     [0.46, 0.76]
+    ##  authenticity 1.60 [1.31, 2.16]         1.27      0.62     [0.46, 0.76]
+    ##   Self_esteem 2.05 [1.62, 2.79]         1.43      0.49     [0.36, 0.62]
+
+``` r
+tab_model(model)
+```
+
+<table style="border-collapse:collapse; border:none;">
+<tr>
+<th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; ">
+ 
+</th>
+<th colspan="3" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; ">
+relationship_satis
+</th>
+</tr>
+<tr>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  text-align:left; ">
+Predictors
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+Estimates
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+CI
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+p
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(Intercept)
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+10.73
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+5.23 – 16.23
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>\<0.001</strong>
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+power
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.11
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.10 – 0.32
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.308
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+authenticity
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.07
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.06 – 0.20
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.292
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+Self esteem
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.25
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.07 – 0.42
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>0.007</strong>
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
+Observations
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="3">
+104
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+R<sup>2</sup> / R<sup>2</sup> adjusted
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="3">
+0.248 / 0.226
+</td>
+</tr>
+</table>
+
+``` r
+plot_model(model,  type ="est",  show.values = TRUE, vline.color = "#1B191999", line.size = 1.5, dot.size = 2.5, colors = "blue") + theme_bruce()
+```
+
+![](My-project_files/figure-gfm/unnamed-chunk-15-2.png)<!-- -->
