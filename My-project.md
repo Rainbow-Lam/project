@@ -749,4 +749,192 @@ R<sup>2</sup> / R<sup>2</sup> adjusted
 plot_model(model,  type ="est",  show.values = TRUE, vline.color = "#1B191999", line.size = 1.5, dot.size = 2.5, colors = "blue") + theme_bruce()
 ```
 
-![](My-project_files/figure-gfm/unnamed-chunk-15-2.png)<!-- -->
+![](My-project_files/figure-gfm/unnamed-chunk-15-2.png)<!-- --> \#
+Reliability for Self-esteem
+
+``` r
+Alpha(data_clean, "se", 1:10)
+```
+
+    ## 
+    ## Reliability Analysis
+    ## 
+    ## Summary:
+    ## Total Items: 10
+    ## Scale Range: 1 ~ 5
+    ## Total Cases: 104
+    ## Valid Cases: 104 (100.0%)
+    ## 
+    ## Scale Statistics:
+    ## Mean = 3.834
+    ## S.D. = 0.508
+    ## Cronbach’s α = 0.807
+    ## McDonald’s ω = 0.821
+    ## 
+    ## Item Statistics (Cronbach’s α If Item Deleted):
+    ## ───────────────────────────────────────────────
+    ##        Mean    S.D. Item-Rest Cor. Cronbach’s α
+    ## ───────────────────────────────────────────────
+    ## se1   3.875 (0.678)          0.412        0.798
+    ## se2   3.452 (1.148)          0.599        0.777
+    ## se3   3.913 (0.625)          0.463        0.794
+    ## se4   4.010 (0.512)          0.373        0.802
+    ## se5   3.317 (0.948)          0.522        0.786
+    ## se6   3.596 (1.137)          0.561        0.783
+    ## se7   3.990 (0.690)          0.583        0.782
+    ## se8   3.856 (0.939)          0.338        0.808
+    ## se9   4.231 (0.803)          0.551        0.783
+    ## se10  4.096 (0.661)          0.567        0.784
+    ## ───────────────────────────────────────────────
+    ## Item-Rest Cor. = Corrected Item-Total Correlation
+
+# Reliability for relationship satisfaction
+
+``` r
+colnames(data_clean)[colnames(data_clean) == "Relationship1"] <- "R1"
+
+Alpha(data_clean, "R", 1:7)
+```
+
+    ## 
+    ## Reliability Analysis
+    ## 
+    ## Summary:
+    ## Total Items: 7
+    ## Scale Range: 1 ~ 5
+    ## Total Cases: 104
+    ## Valid Cases: 104 (100.0%)
+    ## 
+    ## Scale Statistics:
+    ## Mean = 3.727
+    ## S.D. = 0.523
+    ## Cronbach’s α = 0.824
+    ## McDonald’s ω = 0.825
+    ## 
+    ## Item Statistics (Cronbach’s α If Item Deleted):
+    ## ─────────────────────────────────────────────
+    ##      Mean    S.D. Item-Rest Cor. Cronbach’s α
+    ## ─────────────────────────────────────────────
+    ## R1  4.077 (0.720)          0.488        0.812
+    ## R2  3.750 (0.679)          0.444        0.818
+    ## R3  3.827 (0.660)          0.534        0.805
+    ## R4  3.567 (0.773)          0.633        0.788
+    ## R5  3.625 (0.815)          0.709        0.774
+    ## R6  3.519 (0.800)          0.520        0.808
+    ## R7  3.721 (0.794)          0.636        0.788
+    ## ─────────────────────────────────────────────
+    ## Item-Rest Cor. = Corrected Item-Total Correlation
+
+# Exploratory Factor Analysis for Self-esteem
+
+``` r
+EFA(data_clean, "se", 1:10, method = "pa", plot.scree = TRUE, nfactors = c("parallel"))
+```
+
+    ## 
+    ## Explanatory Factor Analysis
+    ## 
+    ## Summary:
+    ## Total Items: 10
+    ## Scale Range: 1 ~ 5
+    ## Total Cases: 104
+    ## Valid Cases: 104 (100.0%)
+    ## 
+    ## Extraction Method:
+    ## - Principal Axis Factor Analysis
+    ## Rotation Method:
+    ## - (Only one component was extracted. The solution was not rotated.)
+    ## 
+    ## KMO and Bartlett's Test:
+    ## - Kaiser-Meyer-Olkin (KMO) Measure of Sampling Adequacy: MSA = 0.789
+    ## - Bartlett's Test of Sphericity: Approx. χ²(45) = 300.15, p = 2e-39 ***
+    ## 
+    ## Total Variance Explained:
+    ## ────────────────────────────────────────────────────────────────────────────────
+    ##            Eigenvalue Variance % Cumulative % SS Loading Variance % Cumulative %
+    ## ────────────────────────────────────────────────────────────────────────────────
+    ## Factor 1        3.854     38.536       38.536      3.204     32.037       32.037
+    ## Factor 2        1.225     12.255       50.791                                   
+    ## Factor 3        1.031     10.307       61.098                                   
+    ## Factor 4        0.868      8.676       69.774                                   
+    ## Factor 5        0.683      6.831       76.605                                   
+    ## Factor 6        0.664      6.641       83.246                                   
+    ## Factor 7        0.655      6.546       89.792                                   
+    ## Factor 8        0.409      4.090       93.882                                   
+    ## Factor 9        0.311      3.106       96.989                                   
+    ## Factor 10       0.301      3.011      100.000                                   
+    ## ────────────────────────────────────────────────────────────────────────────────
+    ## 
+    ## Factor Loadings (Sorted by Size):
+    ## ───────────────────────
+    ##         PA1 Communality
+    ## ───────────────────────
+    ## se10  0.664       0.440
+    ## se7   0.658       0.433
+    ## se2   0.633       0.400
+    ## se9   0.621       0.386
+    ## se6   0.603       0.364
+    ## se5   0.569       0.323
+    ## se3   0.560       0.314
+    ## se1   0.471       0.222
+    ## se4   0.439       0.192
+    ## se8   0.359       0.129
+    ## ───────────────────────
+    ## Communality = Sum of Squared (SS) Factor Loadings
+    ## (Uniqueness = 1 - Communality)
+
+![](My-project_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+
+# Exploratory Factor Analysis for relationship satisfaction
+
+``` r
+EFA(data_clean, "R", 1:7, method = "pa", plot.scree = TRUE, nfactors = c("parallel"))
+```
+
+    ## 
+    ## Explanatory Factor Analysis
+    ## 
+    ## Summary:
+    ## Total Items: 7
+    ## Scale Range: 1 ~ 5
+    ## Total Cases: 104
+    ## Valid Cases: 104 (100.0%)
+    ## 
+    ## Extraction Method:
+    ## - Principal Axis Factor Analysis
+    ## Rotation Method:
+    ## - (Only one component was extracted. The solution was not rotated.)
+    ## 
+    ## KMO and Bartlett's Test:
+    ## - Kaiser-Meyer-Olkin (KMO) Measure of Sampling Adequacy: MSA = 0.803
+    ## - Bartlett's Test of Sphericity: Approx. χ²(21) = 244.78, p = 5e-40 ***
+    ## 
+    ## Total Variance Explained:
+    ## ───────────────────────────────────────────────────────────────────────────────
+    ##           Eigenvalue Variance % Cumulative % SS Loading Variance % Cumulative %
+    ## ───────────────────────────────────────────────────────────────────────────────
+    ## Factor 1       3.418     48.831       48.831      2.863     40.903       40.903
+    ## Factor 2       1.002     14.319       63.150                                   
+    ## Factor 3       0.776     11.083       74.233                                   
+    ## Factor 4       0.745     10.644       84.878                                   
+    ## Factor 5       0.393      5.609       90.486                                   
+    ## Factor 6       0.343      4.905       95.391                                   
+    ## Factor 7       0.323      4.609      100.000                                   
+    ## ───────────────────────────────────────────────────────────────────────────────
+    ## 
+    ## Factor Loadings (Sorted by Size):
+    ## ─────────────────────
+    ##       PA1 Communality
+    ## ─────────────────────
+    ## R5  0.801       0.642
+    ## R4  0.712       0.507
+    ## R7  0.701       0.491
+    ## R3  0.595       0.354
+    ## R6  0.581       0.337
+    ## R1  0.545       0.297
+    ## R2  0.485       0.235
+    ## ─────────────────────
+    ## Communality = Sum of Squared (SS) Factor Loadings
+    ## (Uniqueness = 1 - Communality)
+
+![](My-project_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->

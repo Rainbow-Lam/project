@@ -178,4 +178,24 @@ tab_model(model)
 plot_model(model,  type ="est",  show.values = TRUE, vline.color = "#1B191999", line.size = 1.5, dot.size = 2.5, colors = "blue") + theme_bruce()
 
 ```
+# Reliability for Self-esteem
+```{r}
+Alpha(data_clean, "se", 1:10)
+```
+# Reliability for relationship satisfaction
+```{r}
+colnames(data_clean)[colnames(data_clean) == "Relationship1"] <- "R1"
+
+Alpha(data_clean, "R", 1:7)
+```
+
+# Exploratory Factor Analysis for Self-esteem
+```{r}
+EFA(data_clean, "se", 1:10, method = "pa", plot.scree = TRUE, nfactors = c("parallel"))
+```
+
+# Exploratory Factor Analysis for relationship satisfaction
+```{r}
+EFA(data_clean, "R", 1:7, method = "pa", plot.scree = TRUE, nfactors = c("parallel"))
+```
 
