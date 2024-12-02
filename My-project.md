@@ -156,11 +156,7 @@ library(ggstatsplot)
 ``` r
 library(performance)
 library(sjPlot)
-```
 
-    ## Learn more about sjPlot with 'browseVignettes("sjPlot")'.
-
-``` r
 dataset <- read.csv("/Users/rainbow/Documents/project\ dataset.csv")
 ```
 
@@ -198,387 +194,10 @@ dataset <- dataset %>%
     ## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
     ## generated.
 
-``` r
-breaks <- c(20, 40, 50)
-labels <- c("Low", "High")
-  
-dataset$SE_group <- cut(dataset$Self_esteem, breaks = breaks, labels = labels, right = FALSE)
-```
-
-\#Normality \##Normality plots
+\#Regression (SE, power, authenticity) \##Correlation
 
 ``` r
-ggplot(dataset, aes(x = relationship_satis)) + geom_histogram(binwidth = 5) + theme_classic()
-```
-
-![](My-project_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
-
-``` r
-ggplot(dataset, aes(x = relationship_satis)) + geom_density(adjust = 2)  + theme_classic()
-```
-
-![](My-project_files/figure-gfm/unnamed-chunk-3-2.png)<!-- -->
-
-``` r
-qq<-ggplot(dataset, aes(sample = relationship_satis)) + geom_qq()  + theme_classic()
-
-qq+ geom_qq_line()
-```
-
-![](My-project_files/figure-gfm/unnamed-chunk-3-3.png)<!-- -->
-\###Normality plots by gender
-
-``` r
-ggplot(dataset, aes(x = relationship_satis)) + geom_histogram(binwidth = 5) + theme_classic() + facet_wrap(~gender) + theme_classic()
-```
-
-![](My-project_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
-
-``` r
-ggplot(dataset, aes(x = relationship_satis)) + geom_density(adjust = 2)  + theme_classic() + facet_wrap(~gender) + theme_classic()
-```
-
-![](My-project_files/figure-gfm/unnamed-chunk-4-2.png)<!-- -->
-
-``` r
-qq<-ggplot(dataset, aes(sample = relationship_satis)) + geom_qq()  + theme_classic() + facet_wrap(~gender) + theme_classic()
-
-qq+ geom_qq_line()+ facet_wrap(~gender) 
-```
-
-![](My-project_files/figure-gfm/unnamed-chunk-4-3.png)<!-- -->
-\##Normality tests
-
-``` r
-describe(dataset$relationship_satis)
-```
-
-    ##    vars   n  mean   sd median trimmed  mad min max range  skew kurtosis   se
-    ## X1    1 104 26.09 3.66     27   26.18 2.97  14  35    21 -0.45     0.89 0.36
-
-``` r
-shapiro.test(dataset$relationship_satis)
-```
-
-    ## 
-    ##  Shapiro-Wilk normality test
-    ## 
-    ## data:  dataset$relationship_satis
-    ## W = 0.95627, p-value = 0.00171
-
-### Normality tests by gender
-
-``` r
-?describeBy()
-
-describeBy(relationship_satis ~ gender, data = dataset)
-```
-
-    ## 
-    ##  Descriptive statistics by group 
-    ## gender: Men
-    ##                    vars  n  mean   sd median trimmed  mad min max range  skew
-    ## relationship_satis    1 46 25.91 3.73     27   26.08 2.97  16  35    19 -0.53
-    ##                    kurtosis   se
-    ## relationship_satis     0.46 0.55
-    ## ------------------------------------------------------------ 
-    ## gender: Women
-    ##                    vars  n  mean   sd median trimmed  mad min max range  skew
-    ## relationship_satis    1 58 26.22 3.64     27   26.25 2.97  14  35    21 -0.36
-    ##                    kurtosis   se
-    ## relationship_satis     1.09 0.48
-
-``` r
-dataset %>%
-  group_by(gender) %>%
-  summarize(W = shapiro.test(relationship_satis)$statistic, p_value = shapiro.test(relationship_satis)$p.value)
-```
-
-    ##           W     p_value
-    ## 1 0.9562674 0.001710247
-
-# Equal Variance between Groups
-
-## Descrptive Variance
-
-``` r
-data_clean<-drop_na(dataset)
-
-var(data_clean$relationship_satis)
-```
-
-    ## [1] 13.41962
-
-``` r
-data_clean %>%
-  group_by(gender) %>%
-  summarize(variance = var(relationship_satis))
-```
-
-    ##   variance
-    ## 1 13.41962
-
-## Equal Variance Test
-
-``` r
-leveneTest(relationship_satis~gender, data_clean)
-```
-
-    ## Warning in leveneTest.default(y = y, group = group, ...): group coerced to
-    ## factor.
-
-    ## Levene's Test for Homogeneity of Variance (center = median)
-    ##        Df F value Pr(>F)
-    ## group   1   5e-04 0.9828
-    ##       102
-
-``` r
-MANOVA(data_clean, dv = "relationship_satis", between = "gender")
-```
-
-    ## 
-    ## ====== ANOVA (Between-Subjects Design) ======
-    ## 
-    ## Descriptives:
-    ## ───────────────────────────
-    ##  "gender"   Mean    S.D.  n
-    ## ───────────────────────────
-    ##     Men   25.913 (3.729) 46
-    ##     Women 26.224 (3.637) 58
-    ## ───────────────────────────
-    ## Total sample size: N = 104
-    ## 
-    ## ANOVA Table:
-    ## Dependent variable(s):      relationship_satis
-    ## Between-subjects factor(s): gender
-    ## Within-subjects factor(s):  –
-    ## Covariate(s):               –
-    ## ─────────────────────────────────────────────────────────────────────
-    ##            MS    MSE df1 df2     F     p     η²p [90% CI of η²p]  η²G
-    ## ─────────────────────────────────────────────────────────────────────
-    ## gender  2.483 13.527   1 102 0.184  .669       .002 [.000, .038] .002
-    ## ─────────────────────────────────────────────────────────────────────
-    ## MSE = mean square error (the residual variance of the linear model)
-    ## η²p = partial eta-squared = SS / (SS + SSE) = F * df1 / (F * df1 + df2)
-    ## ω²p = partial omega-squared = (F - 1) * df1 / (F * df1 + df2 + 1)
-    ## η²G = generalized eta-squared (see Olejnik & Algina, 2003)
-    ## Cohen’s f² = η²p / (1 - η²p)
-    ## 
-    ## Levene’s Test for Homogeneity of Variance:
-    ## ────────────────────────────────────────────────────
-    ##                         Levene’s F df1 df2     p    
-    ## ────────────────────────────────────────────────────
-    ## DV: relationship_satis       0.002   1 102  .963    
-    ## ────────────────────────────────────────────────────
-
-\#Summary Descriptive Statistics
-
-``` r
-data_clean %>%
-  group_by(gender) %>%
-  dplyr::summarize(mean_Self_esteem    = mean(Self_esteem),
-      mean_relationship_satis    = mean(relationship_satis),
-      std_dev_Self_esteem = sd(Self_esteem),
-      std_dev_relationship_satis = sd(relationship_satis),
-      corr_Self_esteem_relationship_satis  = cor(Self_esteem, relationship_satis))
-```
-
-    ## # A tibble: 2 × 6
-    ##   gender mean_Self_esteem mean_relationship_satis std_dev_Self_esteem
-    ##   <chr>             <dbl>                   <dbl>               <dbl>
-    ## 1 Men                38.7                    25.9                5.26
-    ## 2 Women              38.1                    26.2                4.96
-    ## # ℹ 2 more variables: std_dev_relationship_satis <dbl>,
-    ## #   corr_Self_esteem_relationship_satis <dbl>
-
-\#ANOVA \##Recode 2x2 into 1x4
-
-``` r
-data_clean$Group <- ifelse(data_clean$gender == "Women" & data_clean$SE_group == "High", "High SE Women", 
-                     ifelse(data_clean$gender == "Men" & data_clean$SE_group == "High", "High SE Men", 
-                            ifelse(data_clean$gender == "Women" & data_clean$SE_group == "Low", "Low SE Women", 
-                                   "Low SE Men")))
-```
-
-\##contrast coefficients
-
-``` r
-#1st group is High SE Women, 
-#2nd group is High SE men, 
-#3rd group is Low SE Women,
-#4th group is Low SE Men. 
-```
-
-\##Model and tests
-
-``` r
-mod<-MANOVA(data_clean, dv = "relationship_satis", between = c("gender", "SE_group")) 
-```
-
-    ## 
-    ## ====== ANOVA (Between-Subjects Design) ======
-    ## 
-    ## Descriptives:
-    ## ──────────────────────────────────────
-    ##  "gender" "SE_group"   Mean    S.D.  n
-    ## ──────────────────────────────────────
-    ##     Men         Low  24.538 (3.701) 26
-    ##     Men         High 27.700 (2.993) 20
-    ##     Women       Low  25.000 (3.708) 33
-    ##     Women       High 27.840 (2.882) 25
-    ## ──────────────────────────────────────
-    ## Total sample size: N = 104
-    ## 
-    ## ANOVA Table:
-    ## Dependent variable(s):      relationship_satis
-    ## Between-subjects factor(s): gender, SE_group
-    ## Within-subjects factor(s):  –
-    ## Covariate(s):               –
-    ## ───────────────────────────────────────────────────────────────────────────────────
-    ##                         MS    MSE df1 df2      F     p     η²p [90% CI of η²p]  η²G
-    ## ───────────────────────────────────────────────────────────────────────────────────
-    ## gender               2.279 11.520   1 100  0.198  .657       .002 [.000, .039] .002
-    ## SE_group           226.867 11.520   1 100 19.693 <.001 ***   .165 [.068, .274] .165
-    ## gender * SE_group    0.651 11.520   1 100  0.057  .813       .001 [.000, .026] .001
-    ## ───────────────────────────────────────────────────────────────────────────────────
-    ## MSE = mean square error (the residual variance of the linear model)
-    ## η²p = partial eta-squared = SS / (SS + SSE) = F * df1 / (F * df1 + df2)
-    ## ω²p = partial omega-squared = (F - 1) * df1 / (F * df1 + df2 + 1)
-    ## η²G = generalized eta-squared (see Olejnik & Algina, 2003)
-    ## Cohen’s f² = η²p / (1 - η²p)
-    ## 
-    ## Levene’s Test for Homogeneity of Variance:
-    ## ────────────────────────────────────────────────────
-    ##                         Levene’s F df1 df2     p    
-    ## ────────────────────────────────────────────────────
-    ## DV: relationship_satis       1.923   3 100  .131    
-    ## ────────────────────────────────────────────────────
-
-``` r
-EMMEANS(mod, effect = "gender", by = "SE_group", p.adjust = "none")
-```
-
-    ## ------ EMMEANS (effect = "gender") ------
-    ## 
-    ## Joint Tests of "gender":
-    ## ──────────────────────────────────────────────────────────────
-    ##  Effect "SE_group" df1 df2     F     p     η²p [90% CI of η²p]
-    ## ──────────────────────────────────────────────────────────────
-    ##  gender       Low    1 100 0.269  .605       .003 [.000, .043]
-    ##  gender       High   1 100 0.019  .891       .000 [.000, .016]
-    ## ──────────────────────────────────────────────────────────────
-    ## Note. Simple effects of repeated measures with 3 or more levels
-    ## are different from the results obtained with SPSS MANOVA syntax.
-    ## 
-    ## Estimated Marginal Means of "gender":
-    ## ────────────────────────────────────────────────────
-    ##  "gender" "SE_group"   Mean [95% CI of Mean]    S.E.
-    ## ────────────────────────────────────────────────────
-    ##     Men         Low  24.538 [23.218, 25.859] (0.666)
-    ##     Women       Low  25.000 [23.828, 26.172] (0.591)
-    ##     Men         High 27.700 [26.194, 29.206] (0.759)
-    ##     Women       High 27.840 [26.493, 29.187] (0.679)
-    ## ────────────────────────────────────────────────────
-    ## 
-    ## Pairwise Comparisons of "gender":
-    ## ────────────────────────────────────────────────────────────────────────────────────
-    ##     Contrast "SE_group" Estimate    S.E.  df     t     p     Cohen’s d [95% CI of d]
-    ## ────────────────────────────────────────────────────────────────────────────────────
-    ##  Women - Men       Low     0.462 (0.890) 100 0.519  .605       0.136 [-0.384, 0.656]
-    ##  Women - Men       High    0.140 (1.018) 100 0.137  .891       0.041 [-0.554, 0.636]
-    ## ────────────────────────────────────────────────────────────────────────────────────
-    ## Pooled SD for computing Cohen’s d: 3.394
-    ## 
-    ## Disclaimer:
-    ## By default, pooled SD is Root Mean Square Error (RMSE).
-    ## There is much disagreement on how to compute Cohen’s d.
-    ## You are completely responsible for setting `sd.pooled`.
-    ## You might also use `effectsize::t_to_d()` to compute d.
-
-``` r
-EMMEANS(mod, effect = "SE_group", by = "gender", p.adjust = "none")
-```
-
-    ## ------ EMMEANS (effect = "SE_group") ------
-    ## 
-    ## Joint Tests of "SE_group":
-    ## ──────────────────────────────────────────────────────────────
-    ##    Effect "gender" df1 df2     F     p     η²p [90% CI of η²p]
-    ## ──────────────────────────────────────────────────────────────
-    ##  SE_group    Men     1 100 9.808  .002 **    .089 [.020, .188]
-    ##  SE_group    Women   1 100 9.959  .002 **    .091 [.021, .189]
-    ## ──────────────────────────────────────────────────────────────
-    ## Note. Simple effects of repeated measures with 3 or more levels
-    ## are different from the results obtained with SPSS MANOVA syntax.
-    ## 
-    ## Estimated Marginal Means of "SE_group":
-    ## ────────────────────────────────────────────────────
-    ##  "SE_group" "gender"   Mean [95% CI of Mean]    S.E.
-    ## ────────────────────────────────────────────────────
-    ##        Low     Men   24.538 [23.218, 25.859] (0.666)
-    ##        High    Men   27.700 [26.194, 29.206] (0.759)
-    ##        Low     Women 25.000 [23.828, 26.172] (0.591)
-    ##        High    Women 27.840 [26.493, 29.187] (0.679)
-    ## ────────────────────────────────────────────────────
-    ## 
-    ## Pairwise Comparisons of "SE_group":
-    ## ─────────────────────────────────────────────────────────────────────────────────
-    ##    Contrast "gender" Estimate    S.E.  df     t     p     Cohen’s d [95% CI of d]
-    ## ─────────────────────────────────────────────────────────────────────────────────
-    ##  High - Low    Men      3.162 (1.010) 100 3.132  .002 **     0.931 [0.341, 1.522]
-    ##  High - Low    Women    2.840 (0.900) 100 3.156  .002 **     0.837 [0.311, 1.363]
-    ## ─────────────────────────────────────────────────────────────────────────────────
-    ## Pooled SD for computing Cohen’s d: 3.394
-    ## 
-    ## Disclaimer:
-    ## By default, pooled SD is Root Mean Square Error (RMSE).
-    ## There is much disagreement on how to compute Cohen’s d.
-    ## You are completely responsible for setting `sd.pooled`.
-    ## You might also use `effectsize::t_to_d()` to compute d.
-
-\##Visualization
-
-``` r
-plot<-summarySE(data_clean, measurevar="relationship_satis", groupvars=c("gender", "SE_group"))
-
-plot
-```
-
-    ##   gender SE_group  N relationship_satis       sd        se       ci
-    ## 1    Men      Low 26           24.53846 3.701143 0.7258539 1.494924
-    ## 2    Men     High 20           27.70000 2.992974 0.6692494 1.400755
-    ## 3  Women      Low 33           25.00000 3.708099 0.6454972 1.314835
-    ## 4  Women     High 25           27.84000 2.882129 0.5764258 1.189684
-
-``` r
-plot2<-summarySE(data_clean, measurevar="relationship_satis", groupvars=c("Group"))
-
-plot2
-```
-
-    ##           Group  N relationship_satis       sd        se       ci
-    ## 1   High SE Men 20           27.70000 2.992974 0.6692494 1.400755
-    ## 2 High SE Women 25           27.84000 2.882129 0.5764258 1.189684
-    ## 3    Low SE Men 26           24.53846 3.701143 0.7258539 1.494924
-    ## 4  Low SE Women 33           25.00000 3.708099 0.6454972 1.314835
-
-``` r
-ggplot(plot, aes(x = SE_group, y = relationship_satis, fill = SE_group)) +
-  geom_col() + facet_wrap(~ gender) + theme_bruce()
-```
-
-![](My-project_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
-
-``` r
-ggplot(plot2, aes(x = Group, y = relationship_satis, fill = Group)) +
-  geom_col()  + theme_bruce() + theme(axis.text.x = element_text(angle = -10))
-```
-
-![](My-project_files/figure-gfm/unnamed-chunk-13-2.png)<!-- -->
-\#Regression \##Correlation
-
-``` r
-regression <- data_clean %>%
+regression <- dataset %>%
   select(power, authenticity, Self_esteem, relationship_satis)
 
 Corr(regression)
@@ -596,7 +215,7 @@ Corr(regression)
     ## Self_esteem-relationship_satis   0.48 [0.32, 0.62] <.001 *** 104
     ## ────────────────────────────────────────────────────────────────
 
-![](My-project_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+![](My-project_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
 
     ## Correlation matrix is displayed in the RStudio `Plots` Pane.
 
@@ -608,7 +227,7 @@ model<-lm(relationship_satis ~ power + authenticity + Self_esteem, data = regres
 check_model(model)
 ```
 
-![](My-project_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+![](My-project_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 ``` r
 model_summary(model)
@@ -746,14 +365,248 @@ R<sup>2</sup> / R<sup>2</sup> adjusted
 </table>
 
 ``` r
-plot_model(model,  type ="est",  show.values = TRUE, vline.color = "#1B191999", line.size = 1.5, dot.size = 2.5, colors = "blue") + theme_bruce()
+plot_model(model,  type ="est",  show.values = TRUE, vline.color = "#1B191999", line.size = 1.5, dot.size = 2.5, colors = "#276bbd") + theme_bruce() +
+  labs(
+    title = "Relationship Satisfaction",
+  )
 ```
 
-![](My-project_files/figure-gfm/unnamed-chunk-15-2.png)<!-- --> \#
-Reliability for Self-esteem
+![](My-project_files/figure-gfm/unnamed-chunk-4-2.png)<!-- --> \#
+Regression (SE and gender) \## Correlation
 
 ``` r
-Alpha(data_clean, "se", 1:10)
+dataset <- dataset %>%
+  mutate_at(c('gender'),funs(str_replace(., "Men", "1")))
+```
+
+    ## Warning: `funs()` was deprecated in dplyr 0.8.0.
+    ## ℹ Please use a list of either functions or lambdas:
+    ## 
+    ## # Simple named list: list(mean = mean, median = median)
+    ## 
+    ## # Auto named with `tibble::lst()`: tibble::lst(mean, median)
+    ## 
+    ## # Using lambdas list(~ mean(., trim = .2), ~ median(., na.rm = TRUE))
+    ## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+    ## generated.
+
+``` r
+dataset <- dataset %>%
+  mutate_at(c('gender'),funs(str_replace(., "Women", "2")))
+```
+
+    ## Warning: `funs()` was deprecated in dplyr 0.8.0.
+    ## ℹ Please use a list of either functions or lambdas:
+    ## 
+    ## # Simple named list: list(mean = mean, median = median)
+    ## 
+    ## # Auto named with `tibble::lst()`: tibble::lst(mean, median)
+    ## 
+    ## # Using lambdas list(~ mean(., trim = .2), ~ median(., na.rm = TRUE))
+    ## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+    ## generated.
+
+``` r
+regression2 <- dataset %>%
+  select(gender, Self_esteem, relationship_satis)
+
+Corr(regression2)
+```
+
+    ## NOTE: `gender` transformed to numeric.
+    ## 
+    ## Pearson's r and 95% confidence intervals:
+    ## ─────────────────────────────────────────────────────────────────
+    ##                                     r      [95% CI]     p       N
+    ## ─────────────────────────────────────────────────────────────────
+    ## gender-Self_esteem              -0.06 [-0.25, 0.13]  .524     104
+    ## gender-relationship_satis        0.04 [-0.15, 0.23]  .669     104
+    ## Self_esteem-relationship_satis   0.48 [ 0.32, 0.62] <.001 *** 104
+    ## ─────────────────────────────────────────────────────────────────
+
+![](My-project_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+
+    ## Correlation matrix is displayed in the RStudio `Plots` Pane.
+
+## Regression
+
+``` r
+model<-lm(relationship_satis ~ Self_esteem * gender, data = regression2)
+
+check_model(model)
+```
+
+![](My-project_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+
+``` r
+model_summary(model)
+```
+
+    ## 
+    ## Model Summary
+    ## 
+    ## ───────────────────────────────────────────
+    ##                      (1) relationship_satis
+    ## ───────────────────────────────────────────
+    ## (Intercept)           11.919 **            
+    ##                       (3.599)              
+    ## Self_esteem            0.362 ***           
+    ##                       (0.092)              
+    ## gender2                1.457               
+    ##                       (4.902)              
+    ## Self_esteem:gender2   -0.024               
+    ##                       (0.127)              
+    ## ───────────────────────────────────────────
+    ## R^2                    0.235               
+    ## Adj. R^2               0.212               
+    ## Num. obs.            104                   
+    ## ───────────────────────────────────────────
+    ## Note. * p < .05, ** p < .01, *** p < .001.
+
+    ## Model has interaction terms. VIFs might be inflated.
+    ##   You may check multicollinearity among predictors of a model without
+    ##   interaction terms.
+
+    ## # Check for Multicollinearity
+    ## 
+    ## Low Correlation
+    ## 
+    ##         Term  VIF     VIF 95% CI Increased SE Tolerance Tolerance 95% CI
+    ##  Self_esteem 2.14 [ 1.68,  2.91]         1.46      0.47     [0.34, 0.60]
+    ## 
+    ## High Correlation
+    ## 
+    ##                Term   VIF     VIF 95% CI Increased SE Tolerance
+    ##              gender 58.33 [40.84, 83.49]         7.64      0.02
+    ##  Self_esteem:gender 58.44 [40.92, 83.65]         7.64      0.02
+    ##  Tolerance 95% CI
+    ##      [0.01, 0.02]
+    ##      [0.01, 0.02]
+
+``` r
+tab_model(model)
+```
+
+<table style="border-collapse:collapse; border:none;">
+<tr>
+<th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; ">
+ 
+</th>
+<th colspan="3" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; ">
+relationship_satis
+</th>
+</tr>
+<tr>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  text-align:left; ">
+Predictors
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+Estimates
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+CI
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+p
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(Intercept)
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+11.92
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+4.78 – 19.06
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>0.001</strong>
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+Self esteem
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.36
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.18 – 0.54
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>\<0.001</strong>
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+gender \[2\]
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.46
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-8.27 – 11.18
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.767
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+Self esteem × gender \[2\]
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.28 – 0.23
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.850
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
+Observations
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="3">
+104
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+R<sup>2</sup> / R<sup>2</sup> adjusted
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="3">
+0.235 / 0.212
+</td>
+</tr>
+</table>
+
+``` r
+plot_model(
+  model,
+  type = "est",
+  show.values = TRUE,
+  vline.color = "#1B191999",
+  line.size = 1.5,
+  dot.size = 2.5,
+  colors = "#276bbd",
+  axis.labels = c("Self esteem x Gender", "Gender", "Self esteem")
+) +
+  theme_bruce() +
+  labs(
+    title = "Relationship Satisfaction"
+  )
+```
+
+![](My-project_files/figure-gfm/unnamed-chunk-6-2.png)<!-- -->
+
+# Reliability for self-esteem
+
+``` r
+Alpha(dataset, "se", 1:10)
 ```
 
     ## 
@@ -791,9 +644,9 @@ Alpha(data_clean, "se", 1:10)
 # Reliability for relationship satisfaction
 
 ``` r
-colnames(data_clean)[colnames(data_clean) == "Relationship1"] <- "R1"
+colnames(dataset)[colnames(dataset) == "Relationship1"] <- "R1"
 
-Alpha(data_clean, "R", 1:7)
+Alpha(dataset, "R", 1:7)
 ```
 
     ## 
@@ -828,7 +681,7 @@ Alpha(data_clean, "R", 1:7)
 # Exploratory Factor Analysis for Self-esteem
 
 ``` r
-EFA(data_clean, "se", 1:10, method = "pa", plot.scree = TRUE, nfactors = c("parallel"))
+EFA(dataset, "se", 1:10, method = "pa", plot.scree = TRUE, nfactors = c("parallel"))
 ```
 
     ## 
@@ -883,12 +736,12 @@ EFA(data_clean, "se", 1:10, method = "pa", plot.scree = TRUE, nfactors = c("para
     ## Communality = Sum of Squared (SS) Factor Loadings
     ## (Uniqueness = 1 - Communality)
 
-![](My-project_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](My-project_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
 # Exploratory Factor Analysis for relationship satisfaction
 
 ``` r
-EFA(data_clean, "R", 1:7, method = "pa", plot.scree = TRUE, nfactors = c("parallel"))
+EFA(dataset, "R", 1:7, method = "pa", plot.scree = TRUE, nfactors = c("parallel"))
 ```
 
     ## 
@@ -937,4 +790,382 @@ EFA(data_clean, "R", 1:7, method = "pa", plot.scree = TRUE, nfactors = c("parall
     ## Communality = Sum of Squared (SS) Factor Loadings
     ## (Uniqueness = 1 - Communality)
 
-![](My-project_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+![](My-project_files/figure-gfm/unnamed-chunk-10-1.png)<!-- --> \#
+Reliability for power and authenticity \## Rename columns
+
+``` r
+colnames(dataset)[colnames(dataset) == "Power1"] <- "P1"
+colnames(dataset)[colnames(dataset) == "A_Living1"] <- "A1"
+colnames(dataset)[colnames(dataset) == "A_Living2"] <- "A2"
+colnames(dataset)[colnames(dataset) == "A_Living3"] <- "A3"
+colnames(dataset)[colnames(dataset) == "A_L4"] <- "A4"
+colnames(dataset)[colnames(dataset) == "A_aliennation1"] <- "A5"
+colnames(dataset)[colnames(dataset) == "A_a2"] <- "A6"
+colnames(dataset)[colnames(dataset) == "A_a3"] <- "A7"
+colnames(dataset)[colnames(dataset) == "A_a4"] <- "A8"
+colnames(dataset)[colnames(dataset) == "A_other1"] <- "A9"
+colnames(dataset)[colnames(dataset) == "A_o2"] <- "A10"
+colnames(dataset)[colnames(dataset) == "A_o3"] <- "A11"
+colnames(dataset)[colnames(dataset) == "A_o4"] <- "A12"
+```
+
+## Reliability of power
+
+``` r
+Alpha(dataset, "P", 1:8)
+```
+
+    ## 
+    ## Reliability Analysis
+    ## 
+    ## Summary:
+    ## Total Items: 8
+    ## Scale Range: 1 ~ 5
+    ## Total Cases: 104
+    ## Valid Cases: 104 (100.0%)
+    ## 
+    ## Scale Statistics:
+    ## Mean = 3.464
+    ## S.D. = 0.473
+    ## Cronbach’s α = 0.713
+    ## McDonald’s ω = 0.735
+    ## 
+    ## Item Statistics (Cronbach’s α If Item Deleted):
+    ## ─────────────────────────────────────────────
+    ##      Mean    S.D. Item-Rest Cor. Cronbach’s α
+    ## ─────────────────────────────────────────────
+    ## P1  3.356 (0.835)          0.481        0.668
+    ## P2  3.606 (0.730)          0.553        0.657
+    ## P3  3.221 (0.812)          0.345        0.698
+    ## P4  3.740 (0.750)          0.613        0.643
+    ## P5  2.481 (0.859)          0.245        0.720
+    ## P6  3.587 (0.866)          0.498        0.664
+    ## P7  3.933 (0.816)          0.287        0.709
+    ## P8  3.788 (0.878)          0.277        0.714
+    ## ─────────────────────────────────────────────
+    ## Item-Rest Cor. = Corrected Item-Total Correlation
+
+## Reliaibility of authenticity
+
+``` r
+Alpha(dataset, "A", 1:4)
+```
+
+    ## 
+    ## Reliability Analysis
+    ## 
+    ## Summary:
+    ## Total Items: 4
+    ## Scale Range: 1 ~ 5
+    ## Total Cases: 104
+    ## Valid Cases: 104 (100.0%)
+    ## 
+    ## Scale Statistics:
+    ## Mean = 3.906
+    ## S.D. = 0.574
+    ## Cronbach’s α = 0.710
+    ## McDonald’s ω = 0.726
+    ## 
+    ## Item Statistics (Cronbach’s α If Item Deleted):
+    ## ─────────────────────────────────────────────
+    ##      Mean    S.D. Item-Rest Cor. Cronbach’s α
+    ## ─────────────────────────────────────────────
+    ## A1  3.731 (0.906)          0.442        0.692
+    ## A2  3.865 (0.801)          0.640        0.554
+    ## A3  3.875 (0.797)          0.478        0.659
+    ## A4  4.154 (0.604)          0.465        0.673
+    ## ─────────────────────────────────────────────
+    ## Item-Rest Cor. = Corrected Item-Total Correlation
+
+``` r
+Alpha(dataset, "A", 5:8)
+```
+
+    ## 
+    ## Reliability Analysis
+    ## 
+    ## Summary:
+    ## Total Items: 4
+    ## Scale Range: 1 ~ 5
+    ## Total Cases: 104
+    ## Valid Cases: 104 (100.0%)
+    ## 
+    ## Scale Statistics:
+    ## Mean = 3.692
+    ## S.D. = 0.803
+    ## Cronbach’s α = 0.842
+    ## McDonald’s ω = 0.858
+    ## 
+    ## Item Statistics (Cronbach’s α If Item Deleted):
+    ## ─────────────────────────────────────────────
+    ##      Mean    S.D. Item-Rest Cor. Cronbach’s α
+    ## ─────────────────────────────────────────────
+    ## A5  3.606 (1.037)          0.534        0.864
+    ## A6  3.567 (1.022)          0.657        0.809
+    ## A7  3.760 (0.919)          0.819        0.740
+    ## A8  3.837 (0.915)          0.725        0.780
+    ## ─────────────────────────────────────────────
+    ## Item-Rest Cor. = Corrected Item-Total Correlation
+
+``` r
+Alpha(dataset, "A", 9:12)
+```
+
+    ## 
+    ## Reliability Analysis
+    ## 
+    ## Summary:
+    ## Total Items: 4
+    ## Scale Range: 1 ~ 5
+    ## Total Cases: 104
+    ## Valid Cases: 104 (100.0%)
+    ## 
+    ## Scale Statistics:
+    ## Mean = 3.024
+    ## S.D. = 0.760
+    ## Cronbach’s α = 0.809
+    ## McDonald’s ω = 0.814
+    ## 
+    ## Item Statistics (Cronbach’s α If Item Deleted):
+    ## ──────────────────────────────────────────────
+    ##       Mean    S.D. Item-Rest Cor. Cronbach’s α
+    ## ──────────────────────────────────────────────
+    ## A9   3.202 (0.979)          0.699        0.724
+    ## A10  3.250 (0.922)          0.693        0.729
+    ## A11  2.971 (1.019)          0.557        0.796
+    ## A12  2.673 (0.886)          0.566        0.788
+    ## ──────────────────────────────────────────────
+    ## Item-Rest Cor. = Corrected Item-Total Correlation
+
+``` r
+Alpha(dataset, "A", 1:12)
+```
+
+    ## 
+    ## Reliability Analysis
+    ## 
+    ## Summary:
+    ## Total Items: 12
+    ## Scale Range: 1 ~ 5
+    ## Total Cases: 104
+    ## Valid Cases: 104 (100.0%)
+    ## 
+    ## Scale Statistics:
+    ## Mean = 3.541
+    ## S.D. = 0.516
+    ## Cronbach’s α = 0.809
+    ## McDonald’s ω = 0.816
+    ## 
+    ## Item Statistics (Cronbach’s α If Item Deleted):
+    ## ──────────────────────────────────────────────
+    ##       Mean    S.D. Item-Rest Cor. Cronbach’s α
+    ## ──────────────────────────────────────────────
+    ## A1   3.731 (0.906)          0.190        0.818
+    ## A2   3.865 (0.801)          0.334        0.805
+    ## A3   3.875 (0.797)          0.244        0.812
+    ## A4   4.154 (0.604)          0.461        0.797
+    ## A5   3.606 (1.037)          0.444        0.797
+    ## A6   3.567 (1.022)          0.648        0.775
+    ## A7   3.760 (0.919)          0.595        0.782
+    ## A8   3.837 (0.915)          0.525        0.789
+    ## A9   3.202 (0.979)          0.553        0.786
+    ## A10  3.250 (0.922)          0.595        0.782
+    ## A11  2.971 (1.019)          0.460        0.795
+    ## A12  2.673 (0.886)          0.440        0.796
+    ## ──────────────────────────────────────────────
+    ## Item-Rest Cor. = Corrected Item-Total Correlation
+
+## Factor analysis for power
+
+``` r
+EFA(dataset, "P", 1:8, method = "pa", plot.scree = TRUE, nfactors = 1)
+```
+
+    ## 
+    ## Explanatory Factor Analysis
+    ## 
+    ## Summary:
+    ## Total Items: 8
+    ## Scale Range: 1 ~ 5
+    ## Total Cases: 104
+    ## Valid Cases: 104 (100.0%)
+    ## 
+    ## Extraction Method:
+    ## - Principal Axis Factor Analysis
+    ## Rotation Method:
+    ## - (Only one component was extracted. The solution was not rotated.)
+    ## 
+    ## KMO and Bartlett's Test:
+    ## - Kaiser-Meyer-Olkin (KMO) Measure of Sampling Adequacy: MSA = 0.702
+    ## - Bartlett's Test of Sphericity: Approx. χ²(28) = 204.59, p = 9e-29 ***
+    ## 
+    ## Total Variance Explained:
+    ## ───────────────────────────────────────────────────────────────────────────────
+    ##           Eigenvalue Variance % Cumulative % SS Loading Variance % Cumulative %
+    ## ───────────────────────────────────────────────────────────────────────────────
+    ## Factor 1       2.847     35.590       35.590      2.255     28.190       28.190
+    ## Factor 2       1.503     18.783       54.373                                   
+    ## Factor 3       1.064     13.300       67.673                                   
+    ## Factor 4       0.809     10.113       77.785                                   
+    ## Factor 5       0.624      7.802       85.588                                   
+    ## Factor 6       0.440      5.504       91.091                                   
+    ## Factor 7       0.380      4.752       95.843                                   
+    ## Factor 8       0.333      4.157      100.000                                   
+    ## ───────────────────────────────────────────────────────────────────────────────
+    ## 
+    ## Factor Loadings (Sorted by Size):
+    ## ─────────────────────
+    ##       PA1 Communality
+    ## ─────────────────────
+    ## P4  0.787       0.619
+    ## P2  0.707       0.500
+    ## P6  0.688       0.473
+    ## P1  0.493       0.243
+    ## P3  0.374       0.140
+    ## P8  0.319       0.102
+    ## P7  0.311       0.097
+    ## P5  0.284       0.080
+    ## ─────────────────────
+    ## Communality = Sum of Squared (SS) Factor Loadings
+    ## (Uniqueness = 1 - Communality)
+
+![](My-project_files/figure-gfm/unnamed-chunk-14-1.png)<!-- --> \##
+Factor analysis for authenticity
+
+``` r
+EFA(dataset, "A", 1:4, method = "pa", plot.scree = TRUE, nfactors = c("parallel"))
+```
+
+    ## 
+    ## Explanatory Factor Analysis
+    ## 
+    ## Summary:
+    ## Total Items: 4
+    ## Scale Range: 1 ~ 5
+    ## Total Cases: 104
+    ## Valid Cases: 104 (100.0%)
+    ## 
+    ## Extraction Method:
+    ## - Principal Axis Factor Analysis
+    ## Rotation Method:
+    ## - (Only one component was extracted. The solution was not rotated.)
+    ## 
+    ## KMO and Bartlett's Test:
+    ## - Kaiser-Meyer-Olkin (KMO) Measure of Sampling Adequacy: MSA = 0.686
+    ## - Bartlett's Test of Sphericity: Approx. χ²(6) = 85.54, p = 3e-16 ***
+    ## 
+    ## Total Variance Explained:
+    ## ───────────────────────────────────────────────────────────────────────────────
+    ##           Eigenvalue Variance % Cumulative % SS Loading Variance % Cumulative %
+    ## ───────────────────────────────────────────────────────────────────────────────
+    ## Factor 1       2.179     54.474       54.474      1.624     40.603       40.603
+    ## Factor 2       0.845     21.126       75.600                                   
+    ## Factor 3       0.563     14.078       89.678                                   
+    ## Factor 4       0.413     10.322      100.000                                   
+    ## ───────────────────────────────────────────────────────────────────────────────
+    ## 
+    ## Factor Loadings (Sorted by Size):
+    ## ─────────────────────
+    ##       PA1 Communality
+    ## ─────────────────────
+    ## A2  0.815       0.664
+    ## A3  0.598       0.358
+    ## A4  0.558       0.312
+    ## A1  0.539       0.290
+    ## ─────────────────────
+    ## Communality = Sum of Squared (SS) Factor Loadings
+    ## (Uniqueness = 1 - Communality)
+
+![](My-project_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+
+``` r
+EFA(dataset, "A", 5:8, method = "pa", plot.scree = TRUE, nfactors = c("parallel"))
+```
+
+    ## 
+    ## Explanatory Factor Analysis
+    ## 
+    ## Summary:
+    ## Total Items: 4
+    ## Scale Range: 1 ~ 5
+    ## Total Cases: 104
+    ## Valid Cases: 104 (100.0%)
+    ## 
+    ## Extraction Method:
+    ## - Principal Axis Factor Analysis
+    ## Rotation Method:
+    ## - (Only one component was extracted. The solution was not rotated.)
+    ## 
+    ## KMO and Bartlett's Test:
+    ## - Kaiser-Meyer-Olkin (KMO) Measure of Sampling Adequacy: MSA = 0.739
+    ## - Bartlett's Test of Sphericity: Approx. χ²(6) = 216.78, p = 5e-44 ***
+    ## 
+    ## Total Variance Explained:
+    ## ───────────────────────────────────────────────────────────────────────────────
+    ##           Eigenvalue Variance % Cumulative % SS Loading Variance % Cumulative %
+    ## ───────────────────────────────────────────────────────────────────────────────
+    ## Factor 1       2.765     69.115       69.115      2.438     60.951       60.951
+    ## Factor 2       0.632     15.810       84.925                                   
+    ## Factor 3       0.457     11.433       96.357                                   
+    ## Factor 4       0.146      3.643      100.000                                   
+    ## ───────────────────────────────────────────────────────────────────────────────
+    ## 
+    ## Factor Loadings (Sorted by Size):
+    ## ─────────────────────
+    ##       PA1 Communality
+    ## ─────────────────────
+    ## A7  0.962       0.925
+    ## A8  0.837       0.700
+    ## A6  0.704       0.496
+    ## A5  0.563       0.317
+    ## ─────────────────────
+    ## Communality = Sum of Squared (SS) Factor Loadings
+    ## (Uniqueness = 1 - Communality)
+
+![](My-project_files/figure-gfm/unnamed-chunk-15-2.png)<!-- -->
+
+``` r
+EFA(dataset, "A", 9:12, method = "pa", plot.scree = TRUE, nfactors = c("parallel"))
+```
+
+    ## 
+    ## Explanatory Factor Analysis
+    ## 
+    ## Summary:
+    ## Total Items: 4
+    ## Scale Range: 1 ~ 5
+    ## Total Cases: 104
+    ## Valid Cases: 104 (100.0%)
+    ## 
+    ## Extraction Method:
+    ## - Principal Axis Factor Analysis
+    ## Rotation Method:
+    ## - (Only one component was extracted. The solution was not rotated.)
+    ## 
+    ## KMO and Bartlett's Test:
+    ## - Kaiser-Meyer-Olkin (KMO) Measure of Sampling Adequacy: MSA = 0.787
+    ## - Bartlett's Test of Sphericity: Approx. χ²(6) = 135.01, p = 1e-26 ***
+    ## 
+    ## Total Variance Explained:
+    ## ───────────────────────────────────────────────────────────────────────────────
+    ##           Eigenvalue Variance % Cumulative % SS Loading Variance % Cumulative %
+    ## ───────────────────────────────────────────────────────────────────────────────
+    ## Factor 1       2.558     63.940       63.940      2.107     52.686       52.686
+    ## Factor 2       0.636     15.904       79.844                                   
+    ## Factor 3       0.441     11.014       90.859                                   
+    ## Factor 4       0.366      9.141      100.000                                   
+    ## ───────────────────────────────────────────────────────────────────────────────
+    ## 
+    ## Factor Loadings (Sorted by Size):
+    ## ──────────────────────
+    ##        PA1 Communality
+    ## ──────────────────────
+    ## A9   0.815       0.664
+    ## A10  0.801       0.642
+    ## A12  0.642       0.412
+    ## A11  0.624       0.390
+    ## ──────────────────────
+    ## Communality = Sum of Squared (SS) Factor Loadings
+    ## (Uniqueness = 1 - Communality)
+
+![](My-project_files/figure-gfm/unnamed-chunk-15-3.png)<!-- -->

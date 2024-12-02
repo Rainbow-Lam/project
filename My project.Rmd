@@ -36,131 +36,12 @@ dataset <- dataset %>%
 
 dataset <- dataset %>%
   mutate_at(c('gender'),funs(str_replace(., "2", "Women")))
-
-
-breaks <- c(20, 40, 50)
-labels <- c("Low", "High")
-  
-dataset$SE_group <- cut(dataset$Self_esteem, breaks = breaks, labels = labels, right = FALSE)
-
-```
-#Normality
-##Normality plots
-```{r}
-ggplot(dataset, aes(x = relationship_satis)) + geom_histogram(binwidth = 5) + theme_classic()
-
-ggplot(dataset, aes(x = relationship_satis)) + geom_density(adjust = 2)  + theme_classic()
-
-qq<-ggplot(dataset, aes(sample = relationship_satis)) + geom_qq()  + theme_classic()
-
-qq+ geom_qq_line()
-```
-###Normality plots by gender
-```{r}
-ggplot(dataset, aes(x = relationship_satis)) + geom_histogram(binwidth = 5) + theme_classic() + facet_wrap(~gender) + theme_classic()
-
-ggplot(dataset, aes(x = relationship_satis)) + geom_density(adjust = 2)  + theme_classic() + facet_wrap(~gender) + theme_classic()
-
-qq<-ggplot(dataset, aes(sample = relationship_satis)) + geom_qq()  + theme_classic() + facet_wrap(~gender) + theme_classic()
-
-qq+ geom_qq_line()+ facet_wrap(~gender) 
-```
-##Normality tests
-```{r}
-describe(dataset$relationship_satis)
-
-shapiro.test(dataset$relationship_satis)
-
-```
-### Normality tests by gender
-```{r}
-?describeBy()
-
-describeBy(relationship_satis ~ gender, data = dataset)
-
-dataset %>%
-  group_by(gender) %>%
-  summarize(W = shapiro.test(relationship_satis)$statistic, p_value = shapiro.test(relationship_satis)$p.value)
-
 ```
 
-# Equal Variance between Groups
-## Descrptive Variance
-```{r}
-data_clean<-drop_na(dataset)
-
-var(data_clean$relationship_satis)
-
-data_clean %>%
-  group_by(gender) %>%
-  summarize(variance = var(relationship_satis))
-```
-## Equal Variance Test
-```{r}
-leveneTest(relationship_satis~gender, data_clean)
-
-MANOVA(data_clean, dv = "relationship_satis", between = "gender")
-
-```
-#Summary Descriptive Statistics
-```{r}
-data_clean %>%
-  group_by(gender) %>%
-  dplyr::summarize(mean_Self_esteem    = mean(Self_esteem),
-      mean_relationship_satis    = mean(relationship_satis),
-      std_dev_Self_esteem = sd(Self_esteem),
-      std_dev_relationship_satis = sd(relationship_satis),
-      corr_Self_esteem_relationship_satis  = cor(Self_esteem, relationship_satis))
-```
-
-#ANOVA
-##Recode 2x2 into 1x4
-```{r}
-data_clean$Group <- ifelse(data_clean$gender == "Women" & data_clean$SE_group == "High", "High SE Women", 
-                     ifelse(data_clean$gender == "Men" & data_clean$SE_group == "High", "High SE Men", 
-                            ifelse(data_clean$gender == "Women" & data_clean$SE_group == "Low", "Low SE Women", 
-                                   "Low SE Men")))
-```
-
-##contrast coefficients
-```{r}
-#1st group is High SE Women, 
-#2nd group is High SE men, 
-#3rd group is Low SE Women,
-#4th group is Low SE Men. 
-
-```
-
-##Model and tests
-```{r}
-mod<-MANOVA(data_clean, dv = "relationship_satis", between = c("gender", "SE_group")) 
-
-EMMEANS(mod, effect = "gender", by = "SE_group", p.adjust = "none")
-
-EMMEANS(mod, effect = "SE_group", by = "gender", p.adjust = "none")
-```
-
-##Visualization
-```{r}
-
-plot<-summarySE(data_clean, measurevar="relationship_satis", groupvars=c("gender", "SE_group"))
-
-plot
-
-plot2<-summarySE(data_clean, measurevar="relationship_satis", groupvars=c("Group"))
-
-plot2
-
-ggplot(plot, aes(x = SE_group, y = relationship_satis, fill = SE_group)) +
-  geom_col() + facet_wrap(~ gender) + theme_bruce()
-
-ggplot(plot2, aes(x = Group, y = relationship_satis, fill = Group)) +
-  geom_col()  + theme_bruce() + theme(axis.text.x = element_text(angle = -10))
-```
-#Regression 
+#Regression (SE, power, authenticity)
 ##Correlation
 ```{r}
-regression <- data_clean %>%
+regression <- dataset %>%
   select(power, authenticity, Self_esteem, relationship_satis)
 
 Corr(regression)
@@ -175,27 +56,117 @@ model_summary(model)
 
 tab_model(model)
 
-plot_model(model,  type ="est",  show.values = TRUE, vline.color = "#1B191999", line.size = 1.5, dot.size = 2.5, colors = "blue") + theme_bruce()
+plot_model(model,  type ="est",  show.values = TRUE, vline.color = "#1B191999", line.size = 1.5, dot.size = 2.5, colors = "#276bbd") + theme_bruce() +
+  labs(
+    title = "Relationship Satisfaction",
+  )
+
 
 ```
-# Reliability for Self-esteem
+# Regression (SE and gender)
+## Correlation
 ```{r}
-Alpha(data_clean, "se", 1:10)
+dataset <- dataset %>%
+  mutate_at(c('gender'),funs(str_replace(., "Men", "1")))
+
+dataset <- dataset %>%
+  mutate_at(c('gender'),funs(str_replace(., "Women", "2")))
+
+regression2 <- dataset %>%
+  select(gender, Self_esteem, relationship_satis)
+
+Corr(regression2)
+
 ```
+## Regression
+```{r}
+model<-lm(relationship_satis ~ Self_esteem * gender, data = regression2)
+
+check_model(model)
+
+model_summary(model)
+
+tab_model(model)
+
+plot_model(
+  model,
+  type = "est",
+  show.values = TRUE,
+  vline.color = "#1B191999",
+  line.size = 1.5,
+  dot.size = 2.5,
+  colors = "#276bbd",
+  axis.labels = c("Self esteem x Gender", "Gender", "Self esteem")
+) +
+  theme_bruce() +
+  labs(
+    title = "Relationship Satisfaction"
+  )
+    
+```
+
+# Reliability for self-esteem
+```{r}
+Alpha(dataset, "se", 1:10)
+```
+
 # Reliability for relationship satisfaction
 ```{r}
-colnames(data_clean)[colnames(data_clean) == "Relationship1"] <- "R1"
+colnames(dataset)[colnames(dataset) == "Relationship1"] <- "R1"
 
-Alpha(data_clean, "R", 1:7)
+Alpha(dataset, "R", 1:7)
 ```
 
 # Exploratory Factor Analysis for Self-esteem
 ```{r}
-EFA(data_clean, "se", 1:10, method = "pa", plot.scree = TRUE, nfactors = c("parallel"))
+EFA(dataset, "se", 1:10, method = "pa", plot.scree = TRUE, nfactors = c("parallel"))
 ```
 
 # Exploratory Factor Analysis for relationship satisfaction
 ```{r}
-EFA(data_clean, "R", 1:7, method = "pa", plot.scree = TRUE, nfactors = c("parallel"))
+EFA(dataset, "R", 1:7, method = "pa", plot.scree = TRUE, nfactors = c("parallel"))
+```
+# Reliability for power and authenticity
+## Rename columns 
+```{r}
+colnames(dataset)[colnames(dataset) == "Power1"] <- "P1"
+colnames(dataset)[colnames(dataset) == "A_Living1"] <- "A1"
+colnames(dataset)[colnames(dataset) == "A_Living2"] <- "A2"
+colnames(dataset)[colnames(dataset) == "A_Living3"] <- "A3"
+colnames(dataset)[colnames(dataset) == "A_L4"] <- "A4"
+colnames(dataset)[colnames(dataset) == "A_aliennation1"] <- "A5"
+colnames(dataset)[colnames(dataset) == "A_a2"] <- "A6"
+colnames(dataset)[colnames(dataset) == "A_a3"] <- "A7"
+colnames(dataset)[colnames(dataset) == "A_a4"] <- "A8"
+colnames(dataset)[colnames(dataset) == "A_other1"] <- "A9"
+colnames(dataset)[colnames(dataset) == "A_o2"] <- "A10"
+colnames(dataset)[colnames(dataset) == "A_o3"] <- "A11"
+colnames(dataset)[colnames(dataset) == "A_o4"] <- "A12"
+
+```
+
+## Reliability of power 
+```{r}
+Alpha(dataset, "P", 1:8)
+```
+
+## Reliaibility of authenticity
+```{r}
+Alpha(dataset, "A", 1:4)
+Alpha(dataset, "A", 5:8)
+Alpha(dataset, "A", 9:12)
+
+Alpha(dataset, "A", 1:12)
+```
+
+## Factor analysis for power 
+```{r}
+EFA(dataset, "P", 1:8, method = "pa", plot.scree = TRUE, nfactors = 1)
+```
+## Factor analysis for authenticity
+```{r}
+EFA(dataset, "A", 1:4, method = "pa", plot.scree = TRUE, nfactors = c("parallel"))
+EFA(dataset, "A", 5:8, method = "pa", plot.scree = TRUE, nfactors = c("parallel"))
+EFA(dataset, "A", 9:12, method = "pa", plot.scree = TRUE, nfactors = c("parallel"))
 ```
 
